@@ -9,15 +9,26 @@ public class HttpFetcher {
         StringBuilder builder = new StringBuilder();
 
         URL url = new URL(urlStr);
-        BufferedReader reader = new BufferedReader(
-            new InputStreamReader(url.openStream())
-        );
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setConnectTimeout(5000);
+        connection.setReadTimeout(5000);
 
+        int status = connection.getResponseCode();
+        InputStream inputStream;
+        if (status >= 200 && status < 400) {
+            inputStream = connection.getInputStream();
+        } else {
+            inputStream = connection.getErrorStream();
+        }
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         String line;
         while ((line = reader.readLine()) != null) {
             builder.append(line).append("\n");
         }
         reader.close();
+        connection.disconnect();
 
         return builder.toString();
     }
